@@ -1,0 +1,52 @@
+import Link from "next/link";
+
+export default function Home() {
+  return (
+    <div className="font-sans grid grid-rows-[80px_1fr_60px] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 sm:p-20">
+      <header className="w-full row-start-1 flex items-center justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold">Warhammer Hub</h1>
+        <nav className="hidden sm:flex gap-6">
+          <Link href="/" className="font-medium hover:text-amber-600 transition-colors">Home</Link>
+          <Link href="/scoreboard" className="font-medium hover:text-amber-600 transition-colors">Scoreboard</Link>
+        </nav>
+      </header>
+      
+      <main className="flex flex-col gap-[32px] row-start-2 items-center text-center max-w-4xl">
+        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Welcome to the Ultimate Warhammer Gaming Hub</h2>
+        <p className="text-lg mb-8">
+          Your one-stop resource for all Warhammer gaming content, tools, and utilities to enhance your tabletop experience.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl mt-8">
+          <div className="bg-black/[.05] dark:bg-white/[.06] p-6 rounded-lg hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold mb-3">Scoreboard</h3>
+            <p className="mb-4">Track points for your Warhammer battles with our easy-to-use scoreboard tool.</p>
+            <Link 
+              href="/scoreboard" 
+              className="rounded-md bg-amber-600 hover:bg-amber-700 transition-colors text-white px-4 py-2 font-medium inline-block"
+            >
+              Open Scoreboard
+            </Link>
+          </div>
+          
+          <div className="bg-black/[.05] dark:bg-white/[.06] p-6 rounded-lg hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold mb-3">Coming Soon</h3>
+            <p className="mb-4">More Warhammer tools and resources are on their way! Stay tuned for updates.</p>
+            <button 
+              disabled 
+              className="rounded-md bg-gray-400 cursor-not-allowed text-white px-4 py-2 font-medium inline-block"
+            >
+              Coming Soon
+            </button>
+          </div>
+        </div>
+      </main>
+      
+      <footer className="row-start-3 w-full text-center border-t border-black/[.08] dark:border-white/[.145] pt-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          © {new Date().getFullYear()} Warhammer Hub. This site is not affiliated with Games Workshop.
+        </p>
+      </footer>
+    </div>
+  );
+}
