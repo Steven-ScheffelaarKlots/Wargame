@@ -50,7 +50,7 @@ export const SummaryPhase = ({ gameState, resetGame }: SummaryPhaseProps) => {
               const secondaryTotal = player.secondaryPoints.reduce((a, b) => a + b, 0);
               
               return (
-                <tr key={player.id} className={index === 0 ? "bg-amber-100 dark:bg-amber-900/20" : ""}>
+                <tr key={player.id} className={index === 0 ? "bg-purple-100 dark:bg-purple-900/20" : ""}>
                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium sm:pl-6">
                     {index + 1}
                   </td>
@@ -167,7 +167,7 @@ export const SummaryPhase = ({ gameState, resetGame }: SummaryPhaseProps) => {
       <div className="flex justify-center mt-8">
         <button
           onClick={resetGame}
-          className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-medium"
+          className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium"
         >
           Start New Game
         </button>

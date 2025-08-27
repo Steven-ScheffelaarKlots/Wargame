@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Warhammer Hub",
-  description: "The ultimate hub for Warhammer gaming content and tools",
+  title: "Borehammer",
+  description: "The ultimate hub for tabletop wargaming content and tools",
 };
 
 export default function RootLayout({

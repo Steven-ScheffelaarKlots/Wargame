@@ -67,7 +67,7 @@ export const SelectSecondaryModal = ({
                 >
                   <div 
                     className={`p-3 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                      selectedIds.includes(secondary.id) ? 'bg-amber-100 dark:bg-amber-900/20' : ''
+                      selectedIds.includes(secondary.id) ? 'bg-purple-100 dark:bg-purple-900/20' : ''
                     }`}
                   >
                     <div className="flex items-center space-x-3">
@@ -76,7 +76,7 @@ export const SelectSecondaryModal = ({
                         id={`select-${secondary.id}`}
                         checked={selectedIds.includes(secondary.id)}
                         onChange={() => toggleSelect(secondary.id)}
-                        className="h-5 w-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                        className="h-5 w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                       />
                       <label 
                         htmlFor={`select-${secondary.id}`} 
@@ -154,7 +154,7 @@ export const SelectSecondaryModal = ({
               disabled={selectedIds.length === 0}
               className={`px-4 py-2 rounded-md ${
                 selectedIds.length > 0
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  ? 'bg-purple-600 hover:bg-purple-700 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >

@@ -24,7 +24,7 @@ export const PlayerInfoPhase = ({
         <p className="text-red-500">Error: {error}</p>
         <button 
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md"
+          className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
         >
           Try Again
         </button>
@@ -116,7 +116,7 @@ export const PlayerInfoPhase = ({
           disabled={!players.every(p => p.name && p.faction)}
           className={`px-6 py-2 rounded-md font-medium ${
             players.every(p => p.name && p.faction)
-              ? 'bg-amber-600 hover:bg-amber-700 text-white'
+              ? 'bg-purple-600 hover:bg-purple-700 text-white'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >

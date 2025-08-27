@@ -41,7 +41,7 @@ const NavigationButton = ({ onClick, disabled = false, direction, label }: Navig
     className={`flex items-center px-3 py-2 rounded-md ${
       disabled 
         ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-        : 'bg-blue-600 hover:bg-blue-700 text-white'
+        : 'bg-purple-600 hover:bg-purple-700 text-white'
     }`}
   >
     {direction === 'prev' && (
@@ -167,7 +167,7 @@ export const GamePhase = ({
                               objective.id,
                               !objective.scored
                             )}
-                            className="mr-3 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                            className="mr-3 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                           />
                           <label htmlFor={`${player.id}-primary-${objective.id}-turn${gameState.currentTurn}`} className="cursor-pointer">
                             {objective.description}
@@ -228,7 +228,7 @@ export const GamePhase = ({
                     disabled={player.secondaryDeck.length === 0}
                     className={`px-3 py-1 text-sm rounded-md ${
                       player.secondaryDeck.length > 0
-                        ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
@@ -313,7 +313,7 @@ export const GamePhase = ({
                                     'completions',
                                     index
                                   )}
-                                  className="mr-2 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                                  className="mr-2 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                                   disabled={isDiscarded}
                                 />
                                 <label 
@@ -358,7 +358,7 @@ export const GamePhase = ({
                                       });
                                       document.dispatchEvent(event);
                                     }}
-                                    className="mr-2 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                                    className="mr-2 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                                     disabled={
                                       isDiscarded || 
                                       (!secondary.selectedConditions?.includes(condition.id) && 
@@ -423,7 +423,7 @@ export const GamePhase = ({
                                         className={`h-8 w-8 flex items-center justify-center rounded-l-md ${
                                           count === 0 || isDiscarded 
                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                            : 'bg-amber-600 hover:bg-amber-700 text-white'
+                                            : 'bg-purple-600 hover:bg-purple-700 text-white'
                                         }`}
                                       >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -456,7 +456,7 @@ export const GamePhase = ({
                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                                             : (secondary.score || 0) >= (secondary.maxPoints || Number.MAX_SAFE_INTEGER)
                                               ? 'bg-green-600 hover:bg-green-700 text-white' // Green when max points reached
-                                              : 'bg-amber-600 hover:bg-amber-700 text-white'
+                                              : 'bg-purple-600 hover:bg-purple-700 text-white'
                                         }`}
                                       >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -523,7 +523,7 @@ export const GamePhase = ({
           {isLastTurn ? (
             <button
               onClick={endGame}
-              className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-medium"
+              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium"
             >
               End Game
             </button>
@@ -531,7 +531,7 @@ export const GamePhase = ({
             <>
               <button
                 onClick={endTurn}
-                className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-medium"
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium"
               >
                 End Turn
               </button>

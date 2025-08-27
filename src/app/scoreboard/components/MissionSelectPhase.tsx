@@ -92,7 +92,7 @@ export const MissionSelectPhase = ({
             onClick={() => setMissionSelectionMode('preset')}
             className={`px-4 py-2 rounded-md ${
               gameState.missionSelectionMode === 'preset' || !gameState.missionSelectionMode
-                ? 'bg-amber-600 text-white'
+                ? 'bg-purple-600 text-white'
                 : 'bg-gray-200 dark:bg-gray-700'
             }`}
           >
@@ -102,7 +102,7 @@ export const MissionSelectPhase = ({
             onClick={() => setMissionSelectionMode('custom')}
             className={`px-4 py-2 rounded-md ${
               gameState.missionSelectionMode === 'custom'
-                ? 'bg-amber-600 text-white'
+                ? 'bg-purple-600 text-white'
                 : 'bg-gray-200 dark:bg-gray-700'
             }`}
           >
@@ -110,7 +110,7 @@ export const MissionSelectPhase = ({
           </button>
           <button
             onClick={selectRandomMission}
-            className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white flex items-center"
+            className="px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white flex items-center"
             title="Select a random preset mission"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -138,7 +138,7 @@ export const MissionSelectPhase = ({
                 key={mission.id}
                 className={`border rounded-lg p-6 cursor-pointer ${
                   selectedMission?.id === mission.id
-                    ? 'border-amber-600 bg-amber-600/10'
+                    ? 'border-purple-600 bg-purple-600/10'
                     : 'dark:border-gray-700 bg-black/[.03] dark:bg-white/[.03]'
                 }`}
                 onClick={() => {
@@ -158,7 +158,7 @@ export const MissionSelectPhase = ({
                 <div className="flex justify-between mb-2">
                   <h3 className="text-xl font-bold">{mission.name}</h3>
                   {primaryMission && (
-                    <span className="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-200 rounded-full">
+                    <span className="text-sm px-2 py-1 bg-purple-100 dark:bg-purple-800/30 text-purple-800 dark:text-purple-200 rounded-full">
                       {primaryMission.name}
                     </span>
                   )}
@@ -189,7 +189,7 @@ export const MissionSelectPhase = ({
                   key={mission.id}
                   className={`border rounded-lg p-6 cursor-pointer ${
                     gameState.selectedPrimaryMission === mission.id
-                      ? 'border-amber-600 bg-amber-600/10'
+                      ? 'border-purple-600 bg-purple-600/10'
                       : 'dark:border-gray-700 bg-black/[.03] dark:bg-white/[.03]'
                   }`}
                   onClick={() => {
@@ -235,7 +235,7 @@ export const MissionSelectPhase = ({
                   key={layout.id}
                   className={`border rounded-lg p-6 cursor-pointer ${
                     gameState.selectedTerrainLayout === layout.id
-                      ? 'border-amber-600 bg-amber-600/10'
+                      ? 'border-purple-600 bg-purple-600/10'
                       : 'dark:border-gray-700 bg-black/[.03] dark:bg-white/[.03]'
                   }`}
                   onClick={() => {
@@ -300,7 +300,7 @@ export const MissionSelectPhase = ({
                   onClick={() => setFirstPlayerIndex(index)}
                   className={`px-4 py-2 rounded-md ${
                     gameState.firstPlayerIndex === index
-                      ? 'bg-amber-600 text-white'
+                      ? 'bg-purple-600 text-white'
                       : 'bg-gray-200 dark:bg-gray-700'
                   }`}
                 >
@@ -309,7 +309,7 @@ export const MissionSelectPhase = ({
               ))}
               <button
                 onClick={randomizeFirstPlayer}
-                className="px-4 py-2 rounded-md bg-blue-600 text-white"
+                className="px-4 py-2 rounded-md bg-purple-600 text-white"
               >
                 Random
               </button>
@@ -325,7 +325,7 @@ export const MissionSelectPhase = ({
                   onClick={() => setDeploysFirstIndex(index)}
                   className={`px-4 py-2 rounded-md ${
                     gameState.deploysFirstIndex === index
-                      ? 'bg-amber-600 text-white'
+                      ? 'bg-purple-600 text-white'
                       : 'bg-gray-200 dark:bg-gray-700'
                   }`}
                 >
@@ -334,7 +334,7 @@ export const MissionSelectPhase = ({
               ))}
               <button
                 onClick={randomizeDeploysFirst}
-                className="px-4 py-2 rounded-md bg-blue-600 text-white"
+                className="px-4 py-2 rounded-md bg-purple-600 text-white"
               >
                 Random
               </button>
@@ -360,7 +360,7 @@ export const MissionSelectPhase = ({
         
         <div className="flex items-center">
           {(gameState.firstPlayerIndex === null || gameState.deploysFirstIndex === null) && (
-            <span className="mr-3 text-sm text-amber-500">Select who goes first and who deploys first</span>
+            <span className="mr-3 text-sm text-purple-500">Select who goes first and who deploys first</span>
           )}
           <button
             onClick={() => {
@@ -387,7 +387,7 @@ export const MissionSelectPhase = ({
               gameState.deploysFirstIndex !== null && 
               gameState.selectedPrimaryMission && 
               gameState.selectedTerrainLayout
-                ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                ? 'bg-purple-600 hover:bg-purple-700 text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
