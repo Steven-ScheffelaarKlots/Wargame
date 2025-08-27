@@ -1,0 +1,248 @@
+import React from 'react';
+import { Player } from '../scoreboard/types';
+
+interface SummaryPhaseProps {
+  players: Player[];
+  resetGame: () => void;
+  getFactionColorClass: (faction: string) => string;
+  getSuperfactionForFaction: (faction: string) => string | null;
+  gameState?: {
+    firstPlayerIndex: number | null;
+    deploysFirstIndex: number | null;
+    missionName?: string | null;
+  };
+}
+
+export const SummaryPhase = ({ 
+  players, 
+  resetGame, 
+  getFactionColorClass, 
+  getSuperfactionForFaction,
+  gameState 
+}: SummaryPhaseProps) => {
+  // Determine the winner
+  const winner = players[0].totalPoints > players[1].totalPoints ? players[0] : 
+                 players[1].totalPoints > players[0].totalPoints ? players[1] : null;
+  
+  // Gather all player secondaries for the history
+  const allPlayerSecondaries = players.map(player => {
+    // We only need to use player.secondaries now since discarded secondaries remain there
+    // They're just marked with isDiscarded=true
+    return {
+      playerId: player.id,
+      playerName: player.name,
+      faction: player.faction,
+      // Group by turn
+      secondariesByTurn: [1, 2, 3, 4, 5].map(turn => ({
+        turn,
+        secondaries: player.secondaries.filter(sec => sec.drawnAtTurn === turn)
+      }))
+    };
+  });
+  
+  return (
+    <div className="space-y-8 max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold">Game Summary</h2>
+      
+      <div className="border dark:border-gray-700 rounded-lg p-6 text-center bg-black/[.03] dark:bg-white/[.03]">
+        {winner ? (
+          <>
+            <h3 className="text-xl font-bold mb-2">Winner: {winner.name}</h3>
+            <p className="text-3xl font-bold text-amber-600">
+              {winner.totalPoints} <span className="text-base">points</span>
+            </p>
+          </>
+        ) : (
+          <>
+            <h3 className="text-xl font-bold mb-2">It&apos;s a Draw!</h3>
+            <p className="text-3xl font-bold text-amber-600">
+              {players[0].totalPoints} <span className="text-base">points each</span>
+            </p>
+          </>
+        )}
+        
+        {/* Game details */}
+        {gameState?.missionName && (
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 text-center">
+            <p>Mission: <span className="font-medium">{gameState.missionName}</span></p>
+            
+            {gameState.firstPlayerIndex !== null && gameState.deploysFirstIndex !== null && (
+              <div className="mt-1">
+                <p><span className="font-medium">{players[gameState.deploysFirstIndex].name}</span> deployed first</p>
+                <p><span className="font-medium">{players[gameState.firstPlayerIndex].name}</span> went first</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <div className="mt-6 grid grid-cols-2 gap-4">
+          {players.map(player => (
+            <div 
+              key={player.id} 
+              className="border border-gray-200 dark:border-gray-700 rounded-md p-4"
+            >
+              <h4 className="font-bold">{player.name}</h4>
+              <p>
+                <span className={`text-sm ${getFactionColorClass(player.faction)}`}>
+                  {player.faction}
+                </span>
+                {getSuperfactionForFaction(player.faction) && 
+                  <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
+                    {getSuperfactionForFaction(player.faction)}
+                  </span>
+                }
+              </p>
+              <p className="text-2xl font-bold mt-2">{player.totalPoints} pts</p>
+              
+              <div className="mt-4 text-left">
+                <h5 className="text-sm font-medium border-b pb-1 mb-2">Points by Turn</h5>
+                
+                <div className="grid grid-cols-6 gap-1 text-center text-xs mb-1">
+                  <div className="p-1"></div>
+                  {[1, 2, 3, 4, 5].map(turn => (
+                    <div key={turn} className="p-1">
+                      <div className="text-gray-500">Turn {turn}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-6 gap-1 text-center text-xs">
+                  <div className="p-1 text-left">Primary</div>
+                  {player.primaryPoints.map((points: number, i: number) => (
+                    <div key={i} className="p-1">
+                      <div>{points}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-6 gap-1 text-center text-xs border-b border-gray-200 dark:border-gray-700 pb-1 mb-1">
+                  <div className="p-1 text-left">Secondary</div>
+                  {player.secondaryPoints.map((points: number, i: number) => (
+                    <div key={i} className="p-1">
+                      <div>{points}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="grid grid-cols-6 gap-1 text-center text-xs font-medium">
+                  <div className="p-1 text-left">Total</div>
+                  {player.points.map((points: number, i: number) => (
+                    <div key={i} className="p-1">
+                      <div>{points}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Secondaries breakdown by turn */}
+      <div className="border dark:border-gray-700 rounded-lg p-6">
+        <h3 className="text-xl font-bold mb-4">Secondaries Breakdown</h3>
+        
+        <div className="space-y-8">
+          {allPlayerSecondaries.map(playerData => (
+            <div key={playerData.playerId} className="border-b pb-6 last:border-0 last:pb-0 dark:border-gray-700">
+              <h4 className="font-bold text-lg flex items-center gap-2">
+                {playerData.playerName}
+                <span className={`text-sm ${getFactionColorClass(playerData.faction)}`}>
+                  {playerData.faction}
+                </span>
+              </h4>
+              
+              {/* Display secondaries by turn */}
+              <div className="mt-4 space-y-6">
+                {playerData.secondariesByTurn.map(turnData => {
+                  if (turnData.secondaries.length === 0) return null;
+                  
+                  return (
+                    <div key={turnData.turn}>
+                      <h5 className="font-medium border-b border-gray-200 dark:border-gray-700 pb-1 mb-3">
+                        Turn {turnData.turn} Secondaries
+                      </h5>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {turnData.secondaries.map(secondary => (
+                          <div 
+                            key={secondary.id} 
+                            className={`border rounded-md p-3 ${
+                              secondary.isInactive 
+                                ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 opacity-75' 
+                                : secondary.isDiscarded 
+                                  ? 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/10' 
+                                  : secondary.isCompleted
+                                    ? 'border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-900/10'
+                                    : 'border-gray-200 dark:border-gray-700'
+                            }`}
+                          >
+                            <div className="flex justify-between mb-1">
+                              <h6 className="font-medium">{secondary.name}</h6>
+                              <div className="flex items-center gap-2">
+                                {secondary.isDiscarded && (
+                                  <span className="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded">
+                                    Discarded
+                                  </span>
+                                )}
+                                {secondary.isCompleted && !secondary.isDiscarded && (
+                                  <span className="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
+                                    Completed
+                                  </span>
+                                )}
+                                {secondary.isInactive && (
+                                  <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 rounded">
+                                    Inactive
+                                  </span>
+                                )}
+                                <span className="text-amber-600 font-mono">
+                                  {secondary.score} pts
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {secondary.category && (
+                              <div className="text-xs text-gray-500">
+                                Category: {secondary.category}
+                              </div>
+                            )}
+                            
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {secondary.shortDescription}
+                            </p>
+                            
+                            {secondary.maxCompletions !== undefined && (
+                              <div className="mt-2 text-xs text-gray-500">
+                                Completed: {secondary.completions}/{secondary.maxCompletions} 
+                                ({secondary.pointsPerCompletion} pts each)
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {!playerData.secondariesByTurn.some(t => t.secondaries.length > 0) && (
+                  <p className="text-sm italic text-gray-500 mt-2">
+                    No secondaries were drawn
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="flex justify-center pt-4">
+        <button
+          onClick={resetGame}
+          className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md"
+        >
+          New Game
+        </button>
+      </div>
+    </div>
+  );
+};

@@ -9,6 +9,7 @@ export const mockScoreboardData: ScoreboardData = {
     { id: "adeptus-mechanicus", name: "Adeptus Mechanicus", superfaction: "imperium" },
     { id: "astra-militarum", name: "Astra Militarum", superfaction: "imperium" },
     { id: "grey-knights", name: "Grey Knights", superfaction: "imperium" },
+    { id: "imperial-agents", name: "Imperial Agents", superfaction: "imperium" },
     { id: "imperial-knights", name: "Imperial Knights", superfaction: "imperium" },
     { id: "space-marines", name: "Space Marines", superfaction: "imperium" },
     
@@ -17,6 +18,7 @@ export const mockScoreboardData: ScoreboardData = {
     { id: "chaos-knights", name: "Chaos Knights", superfaction: "chaos" },
     { id: "chaos-space-marines", name: "Chaos Space Marines", superfaction: "chaos" },
     { id: "death-guard", name: "Death Guard", superfaction: "chaos" },
+    { id: "emperors-children", name: "Emperor's Children", superfaction: "chaos" },
     { id: "thousand-sons", name: "Thousand Sons", superfaction: "chaos" },
     { id: "world-eaters", name: "World Eaters", superfaction: "chaos" },
     
@@ -66,50 +68,155 @@ export const mockScoreboardData: ScoreboardData = {
   },
   
   secondaries: [
+    {
+      id: "area-denial",
+      name: "Area Denial",
+      description: "Score 2 victory points if you control more objectives than your opponent at the end of the battle.",
+      shortDescription: "Control more objectives than opponent",
+      completions: [
+        {
+          description: "Friendly unit within 3\" of the center and no enemy units within 3\" of the center",
+          points: 2
+        },
+        {
+          description: "Friendly unit within 3\" of the center and no enemy units within 6\" of the center",
+          points: 5
+        }
+      ]
+    },
+    {
+      id: "assassination",
+      name: "Assassination",
+      description: "Score 5 victory points if you kill an enemy character model, or if all enemy character models are destroyed.",
+      shortDescription: "Destroy enemy CHARACTER models",
+      completions: [
+        {
+          description: "Destroy 1+ enemy CHARACTER models",
+          points: 5
+        },
+        {
+          description: "All enemy character models are destroyed",
+          points: 5
+        }
+      ]
+    },
     { 
       id: "behind-enemy-lines", 
       name: "Behind Enemy Lines", 
       description: "Score 3 victory points each time a unit from your army successfully completes the following action: Behind Enemy Lines. A unit can perform this action if all of its models are wholly within the enemy deployment zone. This action cannot be performed by Aircraft.",
       shortDescription: "Unit performs action in enemy deployment zone",
-      category: "Battlefield Supremacy",
-      pointsPerCompletion: 3,
-      maxCompletions: 2
+      completions: [
+        {
+          description: "1 Unit is wholly within the enemy deployment zone",
+          points: 3
+        },
+        {
+          description: "2+ Units are wholly within the enemy deployment zone",
+          points: 4
+        }
+      ]
     },
+    // { 
+    //   id: "bring-it-down", 
+    //   name: "Bring It Down", 
+    //   description: "Score 2 victory points each time an enemy MONSTER or VEHICLE model with a Wounds characteristic of 10 or less is destroyed. Score 3 victory points for each enemy MONSTER or VEHICLE model with a Wounds characteristic of 11 or more that is destroyed.",
+    //   shortDescription: "Destroy enemy MONSTERS and VEHICLES",
+    //   pointsPerCompletion: 2,
+    //   maxCompletions: 3
+    // },
     { 
-      id: "bring-it-down", 
-      name: "Bring It Down", 
-      description: "Score 2 victory points each time an enemy MONSTER or VEHICLE model with a Wounds characteristic of 10 or less is destroyed. Score 3 victory points for each enemy MONSTER or VEHICLE model with a Wounds characteristic of 11 or more that is destroyed.",
-      shortDescription: "Destroy enemy MONSTERS and VEHICLES",
-      category: "No Mercy, No Respite",
-      pointsPerCompletion: 2,
-      maxCompletions: 3
-    },
-    { 
-      id: "deploy-teleport-homer", 
-      name: "Deploy Teleport Homer", 
-      description: "Score 2 victory points each time a unit from your army successfully completes the following action: Deploy Teleport Homer. A unit can start to perform this action at the end of your Movement phase if it is wholly within 6\" of the center of the battlefield and no enemy units are wholly within 6\" of the center of the battlefield.",
+      id: "cleanse", 
+      name: "Cleanse", 
+      description: "Score 2 victory points each time a unit from your army successfully completes the following action: Cleanse. A unit can start to perform this action at the end of your Movement phase if it is wholly within 6\" of the center of the battlefield and no enemy units are wholly within 6\" of the center of the battlefield.",
       shortDescription: "Unit performs action near battlefield center",
-      category: "Shadow Operations",
-      pointsPerCompletion: 2,
-      maxCompletions: 4
+      completions: [
+        {
+          description: "Cleansed 1 objective marker",
+          points: 2
+        },
+        {
+          description: "Cleansed 2+ objective markers",
+          points: 4
+        }
+      ]
     },
-    { 
-      id: "engage-on-all-fronts", 
+    // {
+    //   id: "containment",
+    //   name: "Containment",
+    //   description: "Actions near battlefield edges",
+    //   shortDescription: "Actions near battlefield edges",
+    //   completions: [
+    //     {
+    //       description: "1 Unit is wholly within the opponent's deployment zone",
+    //       points: 2
+    //     },
+    //     {
+    //       description: "2+ Units are wholly within the opponent's deployment zone",
+    //       points: 4
+    //     }
+    //   ]
+    // },
+    {
+      id: "engage-on-all-fronts",
       name: "Engage on All Fronts", 
       description: "Score 2 victory points if you have one or more units from your army wholly within three different table quarters, and those units are all more than 6\" away from the center of the battlefield. Score 3 victory points instead if you have one or more units from your army wholly within each table quarter, and those units are all more than 6\" away from the center of the battlefield.",
       shortDescription: "Have units in 3+ table quarters away from center",
-      category: "Battlefield Supremacy",
-      pointsPerCompletion: 3,
-      maxCompletions: 1
+      completions: [{
+        description: "Units wholly within 3 table quarters",
+        points: 2
+      },
+      {
+        description: "Units wholly within 4 table quarters",
+        points: 4
+      }]
     },
-    { 
-      id: "retrieve-nephilim-data", 
-      name: "Retrieve Nephilim Data", 
-      description: "Score 3 victory points each time a unit from your army successfully completes the following action: Retrieve Nephilim Data. A unit can perform this action if it is within 6\" of the center of a battlefield quarter that you have not already retrieved the Nephilim data from.",
-      shortDescription: "Unit performs action in each battlefield quarter",
-      category: "Shadow Operations",
-      pointsPerCompletion: 3,
-      maxCompletions: 4
+    {
+      id: "no-prisoners",
+      name: "No Prisoners",
+      description: "Score victory points for each enemy model slain during the battle. 1 point per 10 models destroyed, up to a maximum that increases with each battle round.",
+      shortDescription: "Kill enemy models for points",
+      completions: [
+        { 
+          description: "Destroyed 1 enemy unit",
+          points: 2
+        },
+        {
+          description: "Destroyed 2 enemy units",
+          points: 4
+        },
+        {
+          description: "Destroyed 3+ enemy units",
+          points: 5
+        }
+      ]
+    },
+    {
+      id: "recover-assets",
+      name: "Recover Assets",
+      description: "Score 2 victory points each time a unit from your army successfully completes the following action: Recover Assets. A unit can perform this action if it is within 6\" of a battlefield edge that you control.",
+      shortDescription: "Unit performs action near controlled battlefield edge",
+      completions: [{
+        description: "2 units recovered assets",
+        points: 3
+      },
+      {
+        description: "3+ units recovered assets",
+        points: 6
+      }]
+    },
+    {
+      id: "secure-no-mans",
+      name: "Secure No Man's Land",
+      description: "Score 2 victory points each time a unit from your army successfully completes the following action: Secure No Man's Land. A unit can perform this action if it is within 6\" of the center of the battlefield and no enemy units are wholly within 6\" of the center of the battlefield.",
+      shortDescription: "Unit performs action near battlefield center",
+      completions: [{
+        description: "Control 1 objective in No Man's Land",
+        points: 2
+      },
+      {
+        description: "Control 2+ objectives in No Man's Land",
+        points: 5
+      }]
     }
   ],
   

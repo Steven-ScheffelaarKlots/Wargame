@@ -1,17 +1,12 @@
 import Link from "next/link";
+import Navigation from "@/components/Navigation";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[80px_1fr_60px] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 sm:p-20">
-      <header className="w-full row-start-1 flex items-center justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold">Warhammer Hub</h1>
-        <nav className="hidden sm:flex gap-6">
-          <Link href="/" className="font-medium hover:text-amber-600 transition-colors">Home</Link>
-          <Link href="/scoreboard" className="font-medium hover:text-amber-600 transition-colors">Scoreboard</Link>
-        </nav>
-      </header>
+    <div className="font-sans min-h-screen p-4 pb-20 sm:p-6">
+      <Navigation />
       
-      <main className="flex flex-col gap-[32px] row-start-2 items-center text-center max-w-4xl">
+      <main className="max-w-4xl mx-auto mt-8 sm:mt-12 flex flex-col gap-[32px] items-center text-center">
         <h2 className="text-3xl sm:text-4xl font-bold mb-4">Welcome to the Ultimate Warhammer Gaming Hub</h2>
         <p className="text-lg mb-8">
           Your one-stop resource for all Warhammer gaming content, tools, and utilities to enhance your tabletop experience.
@@ -42,7 +37,7 @@ export default function Home() {
         </div>
       </main>
       
-      <footer className="row-start-3 w-full text-center border-t border-black/[.08] dark:border-white/[.145] pt-4">
+      <footer className="w-full text-center border-t border-black/[.08] dark:border-white/[.145] pt-4 mt-12">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           © {new Date().getFullYear()} Warhammer Hub. This site is not affiliated with Games Workshop.
         </p>
