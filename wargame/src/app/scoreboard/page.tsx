@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { ScoreboardAPI } from '@/lib/api';
-import { ScoreboardData } from "@/lib/api/types";
-import { Player, Primary, Secondary, GameState } from './types';
+import { ScoreboardData, PrimaryMissionData } from '@/lib/api/types';
+import { Player, Primary, Secondary, GameState, PrimaryObjective } from './types';
 import Navigation from '@/components/Navigation';
 
 // Component imports
@@ -61,7 +61,10 @@ export default function Scoreboard() {
     terrainLayout: null,
     gamePhase: 'player-info',
     firstPlayerIndex: null,
-    deploysFirstIndex: null
+    deploysFirstIndex: null,
+    selectedPrimaryMission: undefined,
+    selectedTerrainLayout: undefined,
+    missionSelectionMode: 'preset'
   });
   
   // Fetch data from API
@@ -92,33 +95,7 @@ export default function Scoreboard() {
     fetchData();
   }, []);
 
-  // Helper function to get superfaction for a faction name
-  const getSuperfactionForFaction = (factionName: string): string | null => {
-    if (!apiData) return null;
-    
-    const faction = apiData.factions.find(f => f.name === factionName);
-    return faction ? faction.superfaction : null;
-  };
-  
-  // Get faction color class based on superfaction
-  const getFactionColorClass = (factionName: string): string => {
-    if (!apiData) return '';
-    
-    const superfaction = getSuperfactionForFaction(factionName);
-    
-    switch (superfaction) {
-      case 'imperium':
-        return 'bg-blue-100 border-blue-200 dark:bg-blue-900/20 dark:border-blue-900';
-      case 'chaos':
-        return 'bg-red-100 border-red-200 dark:bg-red-900/20 dark:border-red-900';
-      case 'xenos':
-        return 'bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-900';
-      default:
-        return 'bg-gray-100 border-gray-200 dark:bg-gray-800 dark:border-gray-700';
-    }
-  };
-
-  // Update player information
+  // Player and game state management functions  // Update player information
   const updatePlayerInfo = (playerId: string, field: 'name' | 'faction', value: string) => {
     setPlayers(prevPlayers => 
       prevPlayers.map(player => 
@@ -135,12 +112,55 @@ export default function Scoreboard() {
   };
 
   // Select a mission
-  const selectMission = (missionId: string, missionName: string, terrainLayout: string) => {
-    setGameState({
-      ...gameState,
+  const selectMission = (missionId: string, missionName: string, terrainLayout: string, primaryMissionId?: string) => {
+    console.log("Selecting mission:", { missionId, missionName, terrainLayout, primaryMissionId });
+    
+    const updates: Partial<GameState> = {
       mission: missionId,
       missionName,
       terrainLayout
+    };
+    
+    // If a primary mission is specified, also set that
+    if (primaryMissionId) {
+      updates.selectedPrimaryMission = primaryMissionId;
+    }
+    
+    // Also set the terrain layout in the selectedTerrainLayout field
+    updates.selectedTerrainLayout = terrainLayout;
+    
+    setGameState(prevState => ({
+      ...prevState,
+      ...updates
+    }));
+  };
+  
+  // Select a primary mission
+  const selectPrimaryMission = (missionId: string) => {
+    setGameState({
+      ...gameState,
+      selectedPrimaryMission: missionId
+    });
+  };
+  
+  // Select a terrain layout
+  const selectTerrainLayout = (layoutId: string) => {
+    setGameState({
+      ...gameState,
+      selectedTerrainLayout: layoutId
+    });
+  };
+  
+  // Set mission selection mode
+  const setMissionSelectionMode = (mode: 'preset' | 'custom') => {
+    // Clear previous selections when switching modes
+    setGameState({
+      ...gameState,
+      missionSelectionMode: mode,
+      mission: null,
+      missionName: null,
+      selectedPrimaryMission: undefined,
+      selectedTerrainLayout: undefined
     });
   };
 
@@ -166,24 +186,78 @@ export default function Scoreboard() {
   const startGame = (firstPlayerIndex: number, deploysFirstIndex: number) => {
     if (!apiData) return;
     
-    // Set up primary objectives for both players
-    const primaryObjective = apiData.secondaries.find(
-      sec => sec.id === 'primary'
-    );
+    // Debug log to help diagnose issues
+    console.log("Starting game with state:", {
+      mission: gameState.mission,
+      missionName: gameState.missionName,
+      terrainLayout: gameState.terrainLayout,
+      selectedPrimaryMission: gameState.selectedPrimaryMission,
+      selectedTerrainLayout: gameState.selectedTerrainLayout,
+      firstPlayerIndex,
+      deploysFirstIndex
+    });
+    
+    // Get the primary mission from state
+    const selectedPrimaryMissionId = gameState.selectedPrimaryMission;
     
     // Set up secondary deck for both players
     const secondaryDeck = apiData.secondaries
       // Shuffle the deck
       .sort(() => Math.random() - 0.5);
     
+    // Find the primary mission data for the selected primary mission
+    const primaryMissionData = apiData.primaryMissions?.find(
+      (mission: PrimaryMissionData) => mission.id === selectedPrimaryMissionId
+    );
+    
     // Create primary objective
-    const primary: Primary = {
-      id: primaryObjective?.id || 'primary-1',
-      name: primaryObjective?.name || 'Take and Hold',
-      description: primaryObjective?.description || 'Control objectives to score points',
-      pointsPerTurn: [5, 5, 5, 5, 5], // Default points per turn
-      score: [0, 0, 0, 0, 0]
-    };
+    let primary: Primary;
+    
+    if (primaryMissionData) {
+      // Initialize objectives for each turn
+      const objectives: PrimaryObjective[][] = Array(5).fill([]).map((_, turnIndex) => {
+        const turnNumber = turnIndex + 1;
+        return primaryMissionData.objectives
+          .filter((obj) => obj.availableInTurns.includes(turnNumber))
+          .map((obj) => ({
+            id: obj.id,
+            description: obj.description,
+            points: obj.points,
+            availableInTurns: obj.availableInTurns,
+            scored: false
+          }));
+      });
+      
+      primary = {
+        id: primaryMissionData.id,
+        name: primaryMissionData.name,
+        description: primaryMissionData.description,
+        pointsPerTurn: primaryMissionData.maxPointsPerTurn,
+        maxPointsPerTurn: primaryMissionData.maxPointsPerTurn,
+        score: [0, 0, 0, 0, 0],
+        objectives: objectives
+      };
+    } else {
+      // Fallback to legacy format if no primary mission data found
+      const primaryObjective = apiData.primaryObjectives?.find(
+        (obj) => obj.id === 'take-and-hold'
+      ) || {
+        id: 'take-and-hold',
+        name: 'Take and Hold',
+        description: 'Control objectives to score points',
+        pointsPerTurn: [5, 5, 5, 5, 5]
+      };
+      
+      primary = {
+        id: primaryObjective.id,
+        name: primaryObjective.name,
+        description: primaryObjective.description,
+        pointsPerTurn: primaryObjective.pointsPerTurn,
+        maxPointsPerTurn: primaryObjective.pointsPerTurn,
+        score: [0, 0, 0, 0, 0],
+        objectives: []
+      };
+    }
     
     // Update players with decks and primary
     setPlayers(prevPlayers => 
@@ -195,7 +269,10 @@ export default function Scoreboard() {
           ...sec,
           active: true,
           score: 0,
+          scoringType: sec.scoringType || 'exclusive', // Default to exclusive if not specified
           completionsIndex: undefined,
+          selectedConditions: [], // Initialize for multiple scoring type
+          conditionCounts: {}, // Initialize empty counts for counter scoring type
         })),
         secondaries: []
       }))
@@ -220,11 +297,13 @@ export default function Scoreboard() {
         
         const [drawnCard, ...remainingDeck] = player.secondaryDeck;
         
-        // Mark the card as drawn in this turn and initialize for checkbox-based scoring
+        // Mark the card as drawn in this turn and initialize for scoring
         const drawnSecondary: Secondary = {
           ...drawnCard,
           drawnAtTurn: gameState.currentTurn,
           completionsIndex: undefined,
+          selectedConditions: [], // Initialize empty array for multiple scoring
+          conditionCounts: {}, // Initialize empty counts for counter scoring type
           score: 0
         };
         
@@ -252,11 +331,13 @@ export default function Scoreboard() {
         // Separate selected secondaries from the remaining deck
         player.secondaryDeck.forEach(sec => {
           if (secondaryIds.includes(sec.id)) {
-            // Mark the card as drawn in this turn and initialize for checkbox-based scoring
+            // Mark the card as drawn in this turn and initialize for scoring
             selectedSecondaries.push({
               ...sec,
               drawnAtTurn: gameState.currentTurn,
               completionsIndex: undefined,
+              selectedConditions: [], // Initialize empty array for multiple scoring
+              conditionCounts: {}, // Initialize empty counts for counter scoring type
               score: 0
             });
           } else {
@@ -320,6 +401,8 @@ export default function Scoreboard() {
           active: true,
           score: 0,
           completionsIndex: undefined,
+          selectedConditions: [], // Reset for multiple scoring type
+          conditionCounts: {}, // Reset for counter scoring type
           drawnAtTurn: undefined,
           completedAtTurn: undefined,
           discardedAtTurn: undefined,
@@ -409,7 +492,7 @@ export default function Scoreboard() {
     recalculatePlayerPoints();
   };
   
-  // Update a primary objective
+  // Update a primary objective (legacy)
   const updatePrimary = (playerId: string, turn: number, value: number) => {
     setPlayers(prevPlayers => 
       prevPlayers.map(player => {
@@ -423,6 +506,53 @@ export default function Scoreboard() {
           ...player,
           primary: {
             ...player.primary,
+            score: updatedScore
+          }
+        };
+      })
+    );
+    
+    // Recalculate total points
+    recalculatePlayerPoints();
+  };
+  
+  // Update a specific primary objective checkbox
+  const updatePrimaryObjective = (playerId: string, turn: number, objectiveId: string, scored: boolean) => {
+    setPlayers(prevPlayers => 
+      prevPlayers.map(player => {
+        if (player.id !== playerId) return player;
+        if (!player.primary || !player.primary.objectives || !player.primary.objectives[turn]) return player;
+        
+        // Update the specific objective
+        const updatedObjectives = [...player.primary.objectives];
+        const turnObjectives = [...updatedObjectives[turn]];
+        
+        const updatedTurnObjectives = turnObjectives.map(obj => 
+          obj.id === objectiveId ? { ...obj, scored } : obj
+        );
+        
+        updatedObjectives[turn] = updatedTurnObjectives;
+        
+        // Calculate new score based on checked objectives
+        const newTurnScore = updatedTurnObjectives
+          .filter(obj => obj.scored)
+          .reduce((sum, obj) => sum + obj.points, 0);
+        
+        // Cap at max points for the turn
+        const cappedScore = Math.min(
+          newTurnScore, 
+          player.primary.maxPointsPerTurn[turn] || Number.MAX_SAFE_INTEGER
+        );
+        
+        // Update score for this turn
+        const updatedScore = [...player.primary.score];
+        updatedScore[turn] = cappedScore;
+        
+        return {
+          ...player,
+          primary: {
+            ...player.primary,
+            objectives: updatedObjectives,
             score: updatedScore
           }
         };
@@ -475,6 +605,163 @@ export default function Scoreboard() {
     );
   };
   
+  // Update a secondary condition (for multiple scoring type)
+  const updateSecondaryCondition = (
+    playerId: string,
+    secondaryId: string,
+    conditionId: string,
+    checked: boolean
+  ) => {
+    setPlayers(prevPlayers => 
+      prevPlayers.map(player => {
+        if (player.id !== playerId) return player;
+        
+        const updatedSecondaries = player.secondaries.map(sec => {
+          if (sec.id !== secondaryId) return sec;
+          
+          // Don't update if discarded
+          if (sec.isDiscarded) return sec;
+          
+          // Skip if this isn't a multiple-condition secondary
+          if (sec.scoringType !== 'multiple' || !sec.conditions) return sec;
+          
+          // Get the condition that was checked/unchecked
+          const condition = sec.conditions.find(c => c.id === conditionId);
+          if (!condition) return sec;
+          
+          // Get the current selected conditions
+          const selectedConditions = sec.selectedConditions || [];
+          
+          let updatedSelectedConditions: string[];
+          let newScore = sec.score;
+          
+          if (checked) {
+            // Add this condition if it doesn't exist
+            if (!selectedConditions.includes(conditionId)) {
+              updatedSelectedConditions = [...selectedConditions, conditionId];
+              // Update score (ensure it doesn't exceed maxPoints)
+              newScore = Math.min(
+                (sec.score || 0) + condition.points,
+                sec.maxPoints || Number.MAX_SAFE_INTEGER
+              );
+            } else {
+              // No change needed
+              return sec;
+            }
+          } else {
+            // Remove this condition if it exists
+            if (selectedConditions.includes(conditionId)) {
+              updatedSelectedConditions = selectedConditions.filter(id => id !== conditionId);
+              // Update score
+              newScore = Math.max(0, (sec.score || 0) - condition.points);
+            } else {
+              // No change needed
+              return sec;
+            }
+          }
+          
+          return {
+            ...sec,
+            selectedConditions: updatedSelectedConditions,
+            score: newScore,
+            // Mark as completed if we reach max points
+            isCompleted: newScore >= (sec.maxPoints || Number.MAX_SAFE_INTEGER),
+            // Update completedAtTurn if newly completed
+            ...(newScore >= (sec.maxPoints || Number.MAX_SAFE_INTEGER) && !sec.isCompleted 
+                ? { completedAtTurn: gameState.currentTurn } 
+                : {})
+          };
+        });
+        
+        return {
+          ...player,
+          secondaries: updatedSecondaries
+        };
+      })
+    );
+    
+    // Recalculate total points
+    recalculatePlayerPoints();
+  };
+  
+  // Update counter for counter-based secondary
+  const updateSecondaryCounter = (
+    playerId: string,
+    secondaryId: string,
+    conditionId: string,
+    increment: boolean // true to increment, false to decrement
+  ) => {
+    setPlayers(prevPlayers => 
+      prevPlayers.map(player => {
+        if (player.id !== playerId) return player;
+        
+        const updatedSecondaries = player.secondaries.map(sec => {
+          if (sec.id !== secondaryId) return sec;
+          
+          // Don't update if discarded
+          if (sec.isDiscarded) return sec;
+          
+          // Skip if this isn't a counter-based secondary
+          if (sec.scoringType !== 'counter' || !sec.conditions) return sec;
+          
+          // Get the condition to update
+          const condition = sec.conditions.find(c => c.id === conditionId);
+          if (!condition) return sec;
+          
+          // Get the current counts
+          const conditionCounts = sec.conditionCounts || {};
+          const currentCount = conditionCounts[conditionId] || 0;
+          
+          // Calculate new count
+          let newCount;
+          if (increment) {
+            // Allow unlimited counting - points will be capped at maxPoints later
+            newCount = currentCount + 1;
+          } else {
+            // Don't go below zero
+            newCount = Math.max(0, currentCount - 1);
+          }
+          
+          // Only update if count changed
+          if (newCount === currentCount) return sec;
+          
+          // Calculate score difference
+          const countDifference = newCount - currentCount;
+          const scoreDifference = countDifference * condition.points;
+          
+          // Calculate new score (capped at maxPoints)
+          const newScore = Math.min(
+            Math.max(0, sec.score + scoreDifference),
+            sec.maxPoints || Number.MAX_SAFE_INTEGER
+          );
+          
+          return {
+            ...sec,
+            conditionCounts: {
+              ...conditionCounts,
+              [conditionId]: newCount
+            },
+            score: newScore,
+            // Mark as completed if we reach max points
+            isCompleted: newScore >= (sec.maxPoints || Number.MAX_SAFE_INTEGER),
+            // Update completedAtTurn if newly completed
+            ...(newScore >= (sec.maxPoints || Number.MAX_SAFE_INTEGER) && !sec.isCompleted 
+                ? { completedAtTurn: gameState.currentTurn } 
+                : {})
+          };
+        });
+        
+        return {
+          ...player,
+          secondaries: updatedSecondaries
+        };
+      })
+    );
+    
+    // Recalculate total points
+    recalculatePlayerPoints();
+  };
+
   // Navigate to a specific turn
   const navigateToTurn = (turnNumber: number) => {
     if (turnNumber < 1 || turnNumber > gameState.totalTurns) {
@@ -607,7 +894,7 @@ export default function Scoreboard() {
     
     // Create a mission data object for the selected mission
     const selectedMission = gameState.mission 
-      ? apiData.missions.find(m => m.id === gameState.mission) || null
+      ? apiData.missions.find((m) => m.id === gameState.mission) || null
       : null;
     
     return (
@@ -618,25 +905,29 @@ export default function Scoreboard() {
           selectedMission
         }}
         apiData={apiData}
-        selectMission={(missionId) => selectMission(
+        selectMission={(missionId, missionName, terrainLayout, primaryMissionId) => selectMission(
           missionId, 
-          apiData.missions.find(m => m.id === missionId)?.name || '', 
-          apiData.missions.find(m => m.id === missionId)?.terrainLayout || ''
+          missionName,
+          terrainLayout,
+          primaryMissionId
         )}
+        selectPrimaryMission={selectPrimaryMission}
+        selectTerrainLayout={selectTerrainLayout}
+        setMissionSelectionMode={setMissionSelectionMode}
         setFirstPlayerIndex={(index) => setGameState({...gameState, firstPlayerIndex: index})}
         setDeploysFirstIndex={(index) => setGameState({...gameState, deploysFirstIndex: index})}
         randomizeFirstPlayer={randomizeFirstPlayer}
         randomizeDeploysFirst={randomizeDeploysFirst}
-        startGame={() => startGame(
-          gameState.firstPlayerIndex !== null ? gameState.firstPlayerIndex : 0,
-          gameState.deploysFirstIndex !== null ? gameState.deploysFirstIndex : 0
+        startGame={(firstPlayerIndex, deploysFirstIndex) => startGame(
+          firstPlayerIndex,
+          deploysFirstIndex
         )}
       />
     );
   };
   
   // Render game phase
-  // Hook up event listener for turn navigation from GamePhase
+  // Hook up event listeners for turn navigation and secondary condition updates
   useEffect(() => {
     const handleNavigateToTurn = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -645,13 +936,33 @@ export default function Scoreboard() {
       }
     };
     
+    const handleUpdateSecondaryCondition = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { playerId, secondaryId, conditionId, checked } = customEvent.detail || {};
+      if (playerId && secondaryId && conditionId !== undefined && checked !== undefined) {
+        updateSecondaryCondition(playerId, secondaryId, conditionId, checked);
+      }
+    };
+    
+    const handleUpdateSecondaryCounter = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { playerId, secondaryId, conditionId, increment } = customEvent.detail || {};
+      if (playerId && secondaryId && conditionId !== undefined && increment !== undefined) {
+        updateSecondaryCounter(playerId, secondaryId, conditionId, increment);
+      }
+    };
+    
     document.addEventListener('navigateToTurn', handleNavigateToTurn);
+    document.addEventListener('updateSecondaryCondition', handleUpdateSecondaryCondition);
+    document.addEventListener('updateSecondaryCounter', handleUpdateSecondaryCounter);
     
     return () => {
       document.removeEventListener('navigateToTurn', handleNavigateToTurn);
+      document.removeEventListener('updateSecondaryCondition', handleUpdateSecondaryCondition);
+      document.removeEventListener('updateSecondaryCounter', handleUpdateSecondaryCounter);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState.currentTurn]); // Re-add when current turn changes, navigateToTurn is intentionally omitted
+  }, [gameState.currentTurn]); // Re-add when current turn changes, navigateToTurn and updateSecondaryCondition are intentionally omitted
   
   const renderGamePhase = () => {
     return (
@@ -669,6 +980,7 @@ export default function Scoreboard() {
         discardSecondary={discardSecondary}
         shuffleSecondary={shuffleSecondary}
         updatePrimary={updatePrimary}
+        updatePrimaryObjective={updatePrimaryObjective}
         endTurn={endTurn}
         endGame={endGame}
       />

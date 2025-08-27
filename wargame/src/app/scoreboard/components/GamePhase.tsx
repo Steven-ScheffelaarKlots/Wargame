@@ -19,7 +19,8 @@ interface GamePhaseProps {
   drawSpecificSecondaries: (playerId: string, secondaryIds: string[]) => void;
   discardSecondary: (playerId: string, secondaryId: string) => void;
   shuffleSecondary: (playerId: string, secondaryId: string) => void;
-  updatePrimary: (playerId: string, turn: number, value: number) => void;
+  updatePrimary: (playerId: string, turn: number, value: number) => void; // Legacy
+  updatePrimaryObjective: (playerId: string, turn: number, objectiveId: string, scored: boolean) => void;
   endTurn: () => void;
   endGame: () => void;
   // The actual navigation happens through a custom event that's handled in the page component
@@ -59,13 +60,13 @@ const NavigationButton = ({ onClick, disabled = false, direction, label }: Navig
 
 export const GamePhase = ({
   gameState,
-  apiData,
   updateSecondary,
   drawSecondary,
   drawSpecificSecondaries,
   discardSecondary,
   shuffleSecondary,
   updatePrimary,
+  updatePrimaryObjective,
   endTurn,
   endGame
 }: GamePhaseProps) => {
@@ -140,28 +141,66 @@ export const GamePhase = ({
             {/* Primary Objective */}
             {player.primary && (
               <div className="mb-6">
-                <h4 className="font-bold mb-2">{player.primary.name}</h4>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-bold">{player.primary.name}</h4>
+                  <div className="flex items-center">
+                    <span className="font-medium text-lg">
+                      {player.primary.score[gameState.currentTurn - 1] || 0}/{player.primary.maxPointsPerTurn[gameState.currentTurn - 1] || 0} pts
+                    </span>
+                  </div>
+                </div>
                 <p className="text-sm opacity-75 mb-4">{player.primary.description}</p>
                 
-                <div className="flex items-center">
-                  <span className="mr-2">Score:</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={player.primary.pointsPerTurn[gameState.currentTurn - 1] || 0}
-                    value={player.primary?.score[gameState.currentTurn - 1] || 0}
-                    onChange={(e) => updatePrimary(
-                      player.id, 
-                      gameState.currentTurn - 1, 
-                      Math.min(
-                        parseInt(e.target.value) || 0,
-                        player.primary?.pointsPerTurn[gameState.currentTurn - 1] || 0
-                      )
-                    )}
-                    className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-800"
-                  />
-                  <span className="ml-2">/ {player.primary?.pointsPerTurn[gameState.currentTurn - 1]}</span>
-                </div>
+                {/* New objectives-based UI */}
+                {player.primary.objectives && player.primary.objectives[gameState.currentTurn - 1] && (
+                  <div className="space-y-2">
+                    {player.primary.objectives[gameState.currentTurn - 1].map((objective) => (
+                      <div key={objective.id} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`${player.id}-primary-${objective.id}-turn${gameState.currentTurn}`}
+                            checked={objective.scored || false}
+                            onChange={() => updatePrimaryObjective(
+                              player.id,
+                              gameState.currentTurn - 1,
+                              objective.id,
+                              !objective.scored
+                            )}
+                            className="mr-3 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                          />
+                          <label htmlFor={`${player.id}-primary-${objective.id}-turn${gameState.currentTurn}`} className="cursor-pointer">
+                            {objective.description}
+                          </label>
+                        </div>
+                        <span className="font-medium">{objective.points} pts</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Legacy fallback UI */}
+                {(!player.primary.objectives || !player.primary.objectives[gameState.currentTurn - 1]) && (
+                  <div className="flex items-center">
+                    <span className="mr-2">Score:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max={player.primary.pointsPerTurn[gameState.currentTurn - 1] || 0}
+                      value={player.primary?.score[gameState.currentTurn - 1] || 0}
+                      onChange={(e) => updatePrimary(
+                        player.id, 
+                        gameState.currentTurn - 1, 
+                        Math.min(
+                          parseInt(e.target.value) || 0,
+                          player.primary?.pointsPerTurn[gameState.currentTurn - 1] || 0
+                        )
+                      )}
+                      className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-800"
+                    />
+                    <span className="ml-2">/ {player.primary?.pointsPerTurn[gameState.currentTurn - 1]}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -259,32 +298,181 @@ export const GamePhase = ({
                       </div>
 
                       <div className="flex flex-col mt-2 space-y-2">
-                        <div className="flex flex-col space-y-1">
-                          {secondary.completions && secondary.completions.map((completion, index) => (
-                            <div key={index} className="flex items-center">
-                              <input
-                                type="checkbox"
-                                id={`${player.id}-${secondary.id}-completion-${index}`}
-                                checked={secondary.completionsIndex === index}
-                                onChange={() => updateSecondary(
-                                  player.id,
-                                  secondary.id,
-                                  'completions',
-                                  index
-                                )}
-                                className="mr-2 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-                                disabled={isDiscarded}
-                              />
-                              <label 
-                                htmlFor={`${player.id}-${secondary.id}-completion-${index}`}
-                                className="flex justify-between w-full cursor-pointer"
-                              >
-                                <span className="text-sm">{completion.description}</span>
-                                <span className="font-medium">{completion.points} pts</span>
-                              </label>
+                        {/* Exclusive scoring (checkbox-based) */}
+                        {(secondary.scoringType === 'exclusive' || !secondary.scoringType) && (
+                          <div className="flex flex-col space-y-1">
+                            {secondary.completions && secondary.completions.map((completion, index) => (
+                              <div key={index} className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  id={`${player.id}-${secondary.id}-completion-${index}`}
+                                  checked={secondary.completionsIndex === index}
+                                  onChange={() => updateSecondary(
+                                    player.id,
+                                    secondary.id,
+                                    'completions',
+                                    index
+                                  )}
+                                  className="mr-2 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                                  disabled={isDiscarded}
+                                />
+                                <label 
+                                  htmlFor={`${player.id}-${secondary.id}-completion-${index}`}
+                                  className="flex justify-between w-full cursor-pointer"
+                                >
+                                  <span className="text-sm">{completion.description}</span>
+                                  <span className="font-medium">{completion.points} pts</span>
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Multiple scoring (conditions-based) */}
+                        {secondary.scoringType === 'multiple' && secondary.conditions && (
+                          <div className="flex flex-col space-y-2">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-sm font-medium">
+                                Select conditions (max {secondary.maxPoints || 0} pts)
+                              </span>
+                              <span className="text-sm font-medium">
+                                {secondary.score || 0}/{secondary.maxPoints || 0} pts
+                              </span>
                             </div>
-                          ))}
-                        </div>
+                            <div className="flex flex-col space-y-1">
+                              {secondary.conditions.map((condition) => (
+                                <div key={condition.id} className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    id={`${player.id}-${secondary.id}-condition-${condition.id}`}
+                                    checked={secondary.selectedConditions?.includes(condition.id) || false}
+                                    onChange={() => {
+                                      const isSelected = secondary.selectedConditions?.includes(condition.id) || false;
+                                      const event = new CustomEvent('updateSecondaryCondition', { 
+                                        detail: { 
+                                          playerId: player.id,
+                                          secondaryId: secondary.id,
+                                          conditionId: condition.id,
+                                          checked: !isSelected
+                                        } 
+                                      });
+                                      document.dispatchEvent(event);
+                                    }}
+                                    className="mr-2 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                                    disabled={
+                                      isDiscarded || 
+                                      (!secondary.selectedConditions?.includes(condition.id) && 
+                                       (secondary.score || 0) >= (secondary.maxPoints || 0))
+                                    }
+                                  />
+                                  <label 
+                                    htmlFor={`${player.id}-${secondary.id}-condition-${condition.id}`}
+                                    className="flex justify-between w-full cursor-pointer"
+                                  >
+                                    <span className="text-sm">{condition.description}</span>
+                                    <span className="font-medium">{condition.points} pts</span>
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Counter scoring (increment/decrement-based) */}
+                        {secondary.scoringType === 'counter' && secondary.conditions && (
+                          <div className="flex flex-col space-y-2">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-sm font-medium">
+                                Track achievements (max {secondary.maxPoints || 0} pts)
+                              </span>
+                              <span className={`text-sm font-medium ${
+                                (secondary.score || 0) >= (secondary.maxPoints || Number.MAX_SAFE_INTEGER)
+                                  ? 'text-green-600 dark:text-green-400 font-bold'
+                                  : ''
+                              }`}>
+                                {secondary.score || 0}/{secondary.maxPoints || 0} pts
+                                {(secondary.score || 0) >= (secondary.maxPoints || Number.MAX_SAFE_INTEGER) && 
+                                  ' (MAX)'}
+                              </span>
+                            </div>
+                            <div className="flex flex-col space-y-3">
+                              {secondary.conditions.map((condition) => {
+                                const count = (secondary.conditionCounts || {})[condition.id] || 0;
+                                const totalPoints = count * condition.points;
+                                
+                                return (
+                                  <div key={condition.id} className="flex flex-col">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-sm">{condition.description}</span>
+                                      <span className="font-medium">{condition.points} pts each</span>
+                                    </div>
+                                    <div className="flex items-center mt-1">
+                                      <button
+                                        onClick={() => {
+                                          const event = new CustomEvent('updateSecondaryCounter', { 
+                                            detail: { 
+                                              playerId: player.id,
+                                              secondaryId: secondary.id,
+                                              conditionId: condition.id,
+                                              increment: false
+                                            } 
+                                          });
+                                          document.dispatchEvent(event);
+                                        }}
+                                        disabled={count === 0 || isDiscarded}
+                                        className={`h-8 w-8 flex items-center justify-center rounded-l-md ${
+                                          count === 0 || isDiscarded 
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                            : 'bg-amber-600 hover:bg-amber-700 text-white'
+                                        }`}
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                          <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                      </button>
+                                      <div className="px-4 py-1 min-w-[3rem] text-center bg-gray-100 dark:bg-gray-800">
+                                        {count}
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          const event = new CustomEvent('updateSecondaryCounter', { 
+                                            detail: { 
+                                              playerId: player.id,
+                                              secondaryId: secondary.id,
+                                              conditionId: condition.id,
+                                              increment: true
+                                            } 
+                                          });
+                                          document.dispatchEvent(event);
+                                        }}
+                                        disabled={isDiscarded}
+                                        title={
+                                          (secondary.score || 0) >= (secondary.maxPoints || Number.MAX_SAFE_INTEGER)
+                                            ? "Maximum points reached (you can still track additional achievements)"
+                                            : "Increment count"
+                                        }
+                                        className={`h-8 w-8 flex items-center justify-center rounded-r-md ${
+                                          isDiscarded
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                            : (secondary.score || 0) >= (secondary.maxPoints || Number.MAX_SAFE_INTEGER)
+                                              ? 'bg-green-600 hover:bg-green-700 text-white' // Green when max points reached
+                                              : 'bg-amber-600 hover:bg-amber-700 text-white'
+                                        }`}
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                        </svg>
+                                      </button>
+                                      <div className="ml-4">
+                                        <span className="font-medium">{totalPoints} pts</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                         
                         <div className="flex justify-end space-x-2">
                           {!isDiscarded && !isCompleted && (
